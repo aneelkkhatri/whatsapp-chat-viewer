@@ -11,6 +11,7 @@
   let allMessages = [] // store all messages before filtering
   let fromDate = null // date range filter
   let toDate = null // date range filter
+  let searchTerm = '' // keyword filter
 
   // If a query param `chat` is provided (e.g. ?chat=/chats/example) try to fetch `${chat}/_chat.txt`
   async function loadFromQuery(){
@@ -295,18 +296,46 @@
     return wrap
   }
 
-  // Filter messages by date range and re-render
+  // Filter messages by date range and keywords, then re-render
   function filterAndRender() {
     messages = allMessages.filter(msg => {
-      if (!msg.date) return true // keep messages without dates
-      const d = msg.date
-      if (fromDate && d < fromDate) return false
-      if (toDate && d > toDate) return false
+      // Date filter
+      if (msg.date) {
+        if (fromDate && msg.date < fromDate) return false
+        if (toDate && msg.date > toDate) return false
+      }
+      
+      // Keyword filter
+      if (searchTerm) {
+        const searchText = searchTerm.toLowerCase()
+        const content = [
+          msg.text,
+          msg.sender,
+          msg.dateLabel,
+          msg.timeLabel
+        ].join(' ').toLowerCase()
+        
+        // Split search terms by spaces and check if all terms match
+        const terms = searchText.split(/\s+/).filter(t => t)
+        if (terms.length && !terms.every(term => content.includes(term))) {
+          return false
+        }
+      }
+      
       return true
     })
     renderIndex = 0
     chatEl.innerHTML = ''
     renderMore()
+    
+    // Update status with filter info
+    const total = allMessages.length
+    const filtered = messages.length
+    if (filtered === total) {
+      loadingEl.textContent = 'Scroll to load more...'
+    } else {
+      loadingEl.textContent = `Showing ${filtered} of ${total} messages`
+    }
   }
 
   // Date filter handlers
@@ -331,9 +360,23 @@
   clearFilterBtn.addEventListener('click', () => {
     fromDate = null
     toDate = null
+    searchTerm = ''
     fromDateInput.value = ''
     toDateInput.value = ''
+    searchInput.value = ''
     filterAndRender()
+  })
+  
+  // Keyword search handler
+  const searchInput = document.getElementById('searchInput')
+  let searchTimeout = null
+  searchInput.addEventListener('input', (e) => {
+    // Debounce search to avoid too many re-renders while typing
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(() => {
+      searchTerm = e.target.value.trim()
+      filterAndRender()
+    }, 300)
   })
 
   // Set min/max dates on inputs when messages load
