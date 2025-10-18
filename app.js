@@ -53,10 +53,13 @@
   loadFromQuery()
 
   fileInput.addEventListener('change', async (e)=>{
+    const params = new URLSearchParams(window.location.search)
+    const reversed = params.get('reversed') === '1'
     const f = e.target.files && e.target.files[0]
     if(!f) return
     const text = await f.text()
     allMessages = parseWhatsAppExport(text)
+    if (reversed) allMessages.reverse()
     filterAndRender()
   })
 
