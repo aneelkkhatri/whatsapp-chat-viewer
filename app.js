@@ -14,10 +14,11 @@
     try{
       const params = new URLSearchParams(window.location.search)
       const chatParam = params.get('chat')
+      const reversed = params.get('reversed') === '1'
       if(!chatParam) return
       // normalize and build path
-  const base = chatParam.replace(/\/+$/,'')
-  chatBase = base
+      const base = chatParam.replace(/\/+$/,'')
+      chatBase = base
       const candidates = [base + '/_chat.txt', base + '.txt', base]
       loadingEl.textContent = `Loading ${candidates[0]} ...`
       // try sequentially
@@ -28,6 +29,7 @@
           if(!res.ok) continue
           const text = await res.text()
           messages = parseWhatsAppExport(text)
+          if(reversed) messages.reverse()
           renderIndex = 0
           chatEl.innerHTML = ''
           renderMore()
