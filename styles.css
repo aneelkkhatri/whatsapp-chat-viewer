@@ -12,8 +12,11 @@ header{padding:16px;background:linear-gradient(90deg,#2b7a78,#2b5878);color:#fff
 header h1{margin:0;font-size:20px}
 .controls{margin-top:8px;display:flex;align-items:center;gap:12px}
 input[type=file]{display:none}
-.btn{background:rgba(255,255,255,0.12);padding:8px 12px;border-radius:6px;cursor:pointer}
+.btn{background:rgba(255,255,255,0.12);padding:8px 12px;border-radius:6px;cursor:pointer;border:none;color:#fff}
+.btn-sm{padding:4px 8px;font-size:12px}
 .info{color:rgba(255,255,255,0.9);font-size:13px}
+.filter{display:flex;align-items:center;gap:8px;margin:12px 0}
+.date-input{padding:4px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-size:13px}
 
 main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .chat{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column-reverse}

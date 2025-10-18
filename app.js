@@ -8,6 +8,9 @@
   let renderIndex = 0 // how many messages have been rendered (from end)
   const BATCH = 50
   let chatBase = null // when loading via ?chat= this is the base folder to load media from
+  let allMessages = [] // store all messages before filtering
+  let fromDate = null // date range filter
+  let toDate = null // date range filter
 
   // If a query param `chat` is provided (e.g. ?chat=/chats/example) try to fetch `${chat}/_chat.txt`
   async function loadFromQuery(){
@@ -28,11 +31,9 @@
           const res = await fetch(path)
           if(!res.ok) continue
           const text = await res.text()
-          messages = parseWhatsAppExport(text)
-          if(reversed) messages.reverse()
-          renderIndex = 0
-          chatEl.innerHTML = ''
-          renderMore()
+          allMessages = parseWhatsAppExport(text)
+          if(reversed) allMessages.reverse()
+          filterAndRender()
           loadingEl.textContent = `Loaded ${path}`
           loaded = true
           break
@@ -54,11 +55,8 @@
     const f = e.target.files && e.target.files[0]
     if(!f) return
     const text = await f.text()
-    messages = parseWhatsAppExport(text)
-    renderIndex = 0
-    chatEl.innerHTML = ''
-    // render initial batch
-    renderMore()
+    allMessages = parseWhatsAppExport(text)
+    filterAndRender()
   })
 
   // infinite scroll: load more when scrolled near top (because we render newest at bottom and flex-column-reverse)
@@ -295,6 +293,60 @@
       wrap.appendChild(a)
     }
     return wrap
+  }
+
+  // Filter messages by date range and re-render
+  function filterAndRender() {
+    messages = allMessages.filter(msg => {
+      if (!msg.date) return true // keep messages without dates
+      const d = msg.date
+      if (fromDate && d < fromDate) return false
+      if (toDate && d > toDate) return false
+      return true
+    })
+    renderIndex = 0
+    chatEl.innerHTML = ''
+    renderMore()
+  }
+
+  // Date filter handlers
+  const fromDateInput = document.getElementById('fromDate')
+  const toDateInput = document.getElementById('toDate')
+  const clearFilterBtn = document.getElementById('clearFilter')
+
+  fromDateInput.addEventListener('change', (e) => {
+    const val = e.target.value
+    fromDate = val ? new Date(val) : null
+    if (fromDate) fromDate.setHours(0,0,0,0)
+    filterAndRender()
+  })
+
+  toDateInput.addEventListener('change', (e) => {
+    const val = e.target.value
+    toDate = val ? new Date(val) : null
+    if (toDate) toDate.setHours(23,59,59,999)
+    filterAndRender()
+  })
+
+  clearFilterBtn.addEventListener('click', () => {
+    fromDate = null
+    toDate = null
+    fromDateInput.value = ''
+    toDateInput.value = ''
+    filterAndRender()
+  })
+
+  // Set min/max dates on inputs when messages load
+  function updateDateInputLimits() {
+    const dates = allMessages.filter(m => m.date).map(m => m.date)
+    if (dates.length) {
+      const min = new Date(Math.min.apply(null, dates))
+      const max = new Date(Math.max.apply(null, dates))
+      fromDateInput.min = min.toISOString().split('T')[0]
+      fromDateInput.max = max.toISOString().split('T')[0]
+      toDateInput.min = min.toISOString().split('T')[0]
+      toDateInput.max = max.toISOString().split('T')[0]
+    }
   }
 
   // Expose parse for testing in console
