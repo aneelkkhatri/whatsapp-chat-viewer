@@ -7,6 +7,7 @@
   let messages = [] // parsed messages, newest last
   let renderIndex = 0 // how many messages have been rendered (from end)
   const BATCH = 50
+  let chatBase = null // when loading via ?chat= this is the base folder to load media from
 
   // If a query param `chat` is provided (e.g. ?chat=/chats/example) try to fetch `${chat}/_chat.txt`
   async function loadFromQuery(){
@@ -15,7 +16,8 @@
       const chatParam = params.get('chat')
       if(!chatParam) return
       // normalize and build path
-      const base = chatParam.replace(/\/+$/,'')
+  const base = chatParam.replace(/\/+$/,'')
+  chatBase = base
       const candidates = [base + '/_chat.txt', base + '.txt', base]
       loadingEl.textContent = `Loading ${candidates[0]} ...`
       // try sequentially
@@ -96,9 +98,11 @@
     meta.className = 'meta'
     meta.textContent = `${m.sender} • ${m.timeLabel}`
 
-    const content = document.createElement('div')
-    content.className = 'content'
-    content.textContent = m.text
+  const content = document.createElement('div')
+  content.className = 'content'
+  // render text and attachments
+  const nodes = createContentNodes(m.text)
+  nodes.forEach(n => content.appendChild(n))
 
     msg.appendChild(meta)
     msg.appendChild(content)
@@ -223,6 +227,69 @@
       if(ampm === 'AM' && hh===12) hh = 0
     }
     return `${String(hh).padStart(2,'0')}:${mm}:${ss}`
+  }
+
+  // Create DOM nodes for a message text that may contain attachment placeholders like <attached: filename>
+  function createContentNodes(text){
+    const nodes = []
+    if(!text) return nodes
+    // regex to find ‎<attached: filename> (may contain non-ascii whitespace)
+    const attRe = /<?\s*<?attached:\s*([^>\n\r]+)>?/ig
+    let lastIndex = 0
+    let m
+    while((m = attRe.exec(text)) !== null){
+      const idx = m.index
+      if(idx > lastIndex){
+        const txt = text.slice(lastIndex, idx)
+        nodes.push(document.createTextNode(txt))
+      }
+      const filename = m[1].trim()
+      const mediaNode = createMediaNode(filename)
+      nodes.push(mediaNode)
+      lastIndex = attRe.lastIndex
+    }
+    if(lastIndex < text.length){
+      nodes.push(document.createTextNode(text.slice(lastIndex)))
+    }
+    // If there were no attachments and only text, return a single text node
+    if(nodes.length===0) nodes.push(document.createTextNode(text))
+    return nodes
+  }
+
+  function createMediaNode(filename){
+    const wrap = document.createElement('div')
+    wrap.className = 'attachment'
+    // if we have a chatBase, resolve relative path
+    const src = chatBase ? (chatBase.replace(/\/$/,'') + '/' + filename) : filename
+    const lower = filename.toLowerCase()
+    if(lower.match(/\.(jpg|jpeg|png|gif|webp)$/)){
+      const img = document.createElement('img')
+      img.src = src
+      img.alt = filename
+      img.className = 'attached-image'
+      wrap.appendChild(img)
+    } else if(lower.match(/\.(mp3|wav|ogg|opus)$/)){
+      const a = document.createElement('audio')
+      a.controls = true
+      const s = document.createElement('source')
+      s.src = src
+      a.appendChild(s)
+      wrap.appendChild(a)
+    } else if(lower.match(/\.(pdf)$/)){
+      const a = document.createElement('a')
+      a.href = src
+      a.target = '_blank'
+      a.textContent = filename + ' (pdf)'
+      wrap.appendChild(a)
+    } else {
+      // fallback: link to file
+      const a = document.createElement('a')
+      a.href = src
+      a.target = '_blank'
+      a.textContent = filename
+      wrap.appendChild(a)
+    }
+    return wrap
   }
 
   // Expose parse for testing in console
