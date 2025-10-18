@@ -121,7 +121,10 @@
 
     let cur = null
     for(const raw of lines){
-      const line = raw.trimEnd()
+      // sanitize invisible / directional characters which can break regex matching
+      // remove: LEFT-TO-RIGHT MARK (U+200E), RIGHT-TO-LEFT MARK (U+200F), NARROW NO-BREAK SPACE (U+202F), BOM/ZWNBSP (U+FEFF), ZERO WIDTH SPACE (U+200B)
+      const clean = raw.replace(/[\u200E\u200F\u202F\uFEFF\u200B]/g, '')
+      const line = clean.trimEnd()
       if(!line) continue
       const m = line.match(startRe)
       if(m){
@@ -243,7 +246,7 @@
         const txt = text.slice(lastIndex, idx)
         nodes.push(document.createTextNode(txt))
       }
-      const filename = m[1].trim()
+  const filename = m[1].trim().replace(/[\u200E\u200F\u202F\uFEFF\u200B]/g,'')
       const mediaNode = createMediaNode(filename)
       nodes.push(mediaNode)
       lastIndex = attRe.lastIndex
