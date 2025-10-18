@@ -8,6 +8,44 @@
   let renderIndex = 0 // how many messages have been rendered (from end)
   const BATCH = 50
 
+  // If a query param `chat` is provided (e.g. ?chat=/chats/example) try to fetch `${chat}/_chat.txt`
+  async function loadFromQuery(){
+    try{
+      const params = new URLSearchParams(window.location.search)
+      const chatParam = params.get('chat')
+      if(!chatParam) return
+      // normalize and build path
+      const base = chatParam.replace(/\/+$/,'')
+      const candidates = [base + '/_chat.txt', base + '.txt', base]
+      loadingEl.textContent = `Loading ${candidates[0]} ...`
+      // try sequentially
+      let loaded = false
+      for(const path of candidates){
+        try{
+          const res = await fetch(path)
+          if(!res.ok) continue
+          const text = await res.text()
+          messages = parseWhatsAppExport(text)
+          renderIndex = 0
+          chatEl.innerHTML = ''
+          renderMore()
+          loadingEl.textContent = `Loaded ${path}`
+          loaded = true
+          break
+        }catch(err){
+          // try next
+          continue
+        }
+      }
+      if(!loaded){
+        loadingEl.textContent = `Failed to load any chat at ${base} (tried ${candidates.join(', ')})`
+      }
+    }catch(e){
+      console.error(e)
+    }
+  }
+  loadFromQuery()
+
   fileInput.addEventListener('change', async (e)=>{
     const f = e.target.files && e.target.files[0]
     if(!f) return

@@ -8,6 +8,14 @@ How to use
 2. Click "Load chat file" and choose an exported WhatsApp chat file (for example `chats/example.txt`).
 3. The viewer will parse the file and render messages. Scroll up to load older messages (infinite scroll).
 
+Query param
+
+- You can open the app with a `chat` query parameter to auto-load a chat file. For example:
+
+	/index.html?chat=/chats/example
+
+	The app will attempt to fetch `/chats/example/_chat.txt` and render it if available.
+
 Notes
 
 - The parser is a heuristic-based client-side parser. It handles common exported formats like `[dd/mm/yyyy, hh:mm:ss AM] Sender: message` and multi-line messages.
