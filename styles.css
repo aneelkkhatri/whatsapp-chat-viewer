@@ -1,0 +1,32 @@
+:root{
+  --bg:#f4f6f8;
+  --card:#fff;
+  --mine:#DCF8C6;
+  --theirs:#fff;
+  --muted:#666;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter, Roboto, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial}
+body{background:var(--bg);display:flex;flex-direction:column}
+header{padding:16px;background:linear-gradient(90deg,#2b7a78,#2b5878);color:#fff}
+header h1{margin:0;font-size:20px}
+.controls{margin-top:8px;display:flex;align-items:center;gap:12px}
+input[type=file]{display:none}
+.btn{background:rgba(255,255,255,0.12);padding:8px 12px;border-radius:6px;cursor:pointer}
+.info{color:rgba(255,255,255,0.9);font-size:13px}
+
+main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.chat{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column-reverse}
+.day-sep{align-self:center;background:#e9eef2;color:#333;padding:6px 12px;border-radius:999px;margin:12px 0;font-weight:600;font-size:13px}
+.message{max-width:70%;padding:8px 10px;border-radius:8px;margin:6px 0;box-shadow:0 1px 0 rgba(0,0,0,0.04);position:relative}
+.meta{font-size:11px;color:var(--muted);margin-bottom:6px}
+.mine{align-self:flex-end;background:var(--mine)}
+.their{align-self:flex-start;background:var(--card)}
+.deleted{font-style:italic;color:#999;background:#fff0;border:1px dashed #f0f0f0}
+.content{white-space:pre-wrap}
+.loading{padding:12px;text-align:center;color:#666}
+
+/* small screens */
+@media (max-width:640px){
+  .message{max-width:86%}
+}

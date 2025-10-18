@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WhatsApp Chat Viewer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>WhatsApp Chat Viewer</h1>
+      <div class="controls">
+        <input id="fileInput" type="file" accept="text/*" />
+        <label for="fileInput" class="btn">Load chat file</label>
+        <div class="info">Drop a WhatsApp-exported .txt chat file or pick one from <code>chats/</code>.</div>
+      </div>
+    </header>
+
+    <main>
+      <div id="chat" class="chat"></div>
+      <div id="loading" class="loading">Scroll to load more...</div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
